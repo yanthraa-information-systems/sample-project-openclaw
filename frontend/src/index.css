@@ -10,7 +10,9 @@
   }
 
   body {
-    @apply bg-surface-950 text-white antialiased;
+    background-color: #080d18;
+    color: white;
+    -webkit-font-smoothing: antialiased;
     font-family: 'Inter', system-ui, sans-serif;
   }
 
@@ -20,30 +22,31 @@
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-surface-900;
+    background-color: #0f172a;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-surface-700 rounded-full;
+    background-color: #334155;
+    border-radius: 9999px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-surface-600;
+    background-color: #475569;
   }
 }
 
 @layer components {
   .prose-invert {
-    --tw-prose-body: theme('colors.surface.200');
-    --tw-prose-headings: theme('colors.white');
-    --tw-prose-bold: theme('colors.white');
-    --tw-prose-links: theme('colors.brand.400');
-    --tw-prose-code: theme('colors.brand.300');
-    --tw-prose-quotes: theme('colors.surface.300');
-    --tw-prose-hr: theme('colors.surface.700');
-    --tw-prose-bullets: theme('colors.surface.400');
-    --tw-prose-counters: theme('colors.surface.400');
-    --tw-prose-th-borders: theme('colors.surface.600');
-    --tw-prose-td-borders: theme('colors.surface.700');
+    --tw-prose-body: #e2e8f0;
+    --tw-prose-headings: #ffffff;
+    --tw-prose-bold: #ffffff;
+    --tw-prose-links: #60a5fa;
+    --tw-prose-code: #93c5fd;
+    --tw-prose-quotes: #cbd5e1;
+    --tw-prose-hr: #334155;
+    --tw-prose-bullets: #94a3b8;
+    --tw-prose-counters: #94a3b8;
+    --tw-prose-th-borders: #475569;
+    --tw-prose-td-borders: #334155;
   }
 }
