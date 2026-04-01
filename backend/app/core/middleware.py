@@ -10,8 +10,6 @@ logger = structlog.get_logger(__name__)
 
 
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
-    """Log every request with timing and correlation ID."""
-
     def __init__(self, app: ASGIApp):
         super().__init__(app)
 
@@ -25,21 +23,16 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         )
 
         start_time = time.perf_counter()
-        logger.info("request_started", query_params=str(request.query_params))
+        logger.info("request_started")
 
+        response = None
         try:
             response = await call_next(request)
+            return response
         except Exception as exc:
             logger.error("request_failed", exc_info=exc)
             raise
         finally:
             duration_ms = round((time.perf_counter() - start_time) * 1000, 2)
-            logger.info(
-                "request_completed",
-                status_code=response.status_code,
-                duration_ms=duration_ms,
-            )
-
-        response.headers["X-Request-ID"] = request_id
-        response.headers["X-Process-Time"] = str(duration_ms)
-        return response
+            status_code = response.status_code if response is not None else 500
+            logger.info("request_completed", status_code=status_code, duration_ms=duration_ms)
