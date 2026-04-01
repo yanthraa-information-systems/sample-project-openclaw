@@ -9,10 +9,6 @@
     padding: 0;
   }
 
-  html {
-    @apply dark;
-  }
-
   body {
     @apply bg-surface-950 text-white antialiased;
     font-family: 'Inter', system-ui, sans-serif;

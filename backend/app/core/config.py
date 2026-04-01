@@ -1,6 +1,5 @@
 from typing import List, Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import field_validator
 import json
 
 
@@ -33,26 +32,17 @@ class Settings(BaseSettings):
     openai_embedding_model: str = "text-embedding-3-small"
     openai_max_tokens: int = 4096
 
-    # AWS S3
+    # AWS S3 (optional — falls back to local storage)
     aws_access_key_id: Optional[str] = None
     aws_secret_access_key: Optional[str] = None
     aws_region: str = "us-east-1"
-    s3_bucket_name: str = "ai-platform-documents"
+    s3_bucket_name: Optional[str] = None
     s3_presigned_url_expiry: int = 3600
 
-    # CORS — accepts JSON array string or comma-separated string
-    cors_origins: List[str] = ["http://localhost:3000", "http://localhost:5173"]
-
-    @field_validator("cors_origins", mode="before")
-    @classmethod
-    def parse_cors_origins(cls, v):
-        if isinstance(v, str):
-            v = v.strip()
-            if v.startswith("["):
-                return json.loads(v)
-            # comma-separated fallback
-            return [o.strip() for o in v.split(",") if o.strip()]
-        return v
+    # CORS — stored as plain string, parsed via property below
+    # Accepts: comma-separated "http://a.com,http://b.com"
+    # or JSON array: '["http://a.com"]'
+    cors_origins_str: str = "http://localhost:3000,http://localhost:5173"
 
     # Rate Limiting
     rate_limit_per_minute: int = 60
@@ -61,23 +51,27 @@ class Settings(BaseSettings):
     faiss_index_path: str = "./data/faiss_index"
     embedding_dimension: int = 1536
 
-    # File Upload
+    # File Upload — stored as plain string, parsed via property below
     max_file_size_mb: int = 50
-    allowed_file_types: List[str] = [
-        "application/pdf",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        "text/plain",
-    ]
+    allowed_file_types_str: str = (
+        "application/pdf,"
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document,"
+        "text/plain"
+    )
 
-    @field_validator("allowed_file_types", mode="before")
-    @classmethod
-    def parse_allowed_file_types(cls, v):
-        if isinstance(v, str):
-            v = v.strip()
-            if v.startswith("["):
-                return json.loads(v)
-            return [o.strip() for o in v.split(",") if o.strip()]
-        return v
+    @property
+    def cors_origins(self) -> List[str]:
+        v = self.cors_origins_str.strip()
+        if v.startswith("["):
+            return json.loads(v)
+        return [o.strip() for o in v.split(",") if o.strip()]
+
+    @property
+    def allowed_file_types(self) -> List[str]:
+        v = self.allowed_file_types_str.strip()
+        if v.startswith("["):
+            return json.loads(v)
+        return [o.strip() for o in v.split(",") if o.strip()]
 
     @property
     def is_production(self) -> bool:

@@ -23,7 +23,7 @@ services:
         value: gpt-4-turbo-preview
       - key: OPENAI_EMBEDDING_MODEL
         value: text-embedding-3-small
-      - key: CORS_ORIGINS
+      - key: CORS_ORIGINS_STR
         value: https://ai-platform-frontend.onrender.com
     disk:
       name: ai-platform-data
