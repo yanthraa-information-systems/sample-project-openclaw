@@ -40,14 +40,18 @@ class Settings(BaseSettings):
     s3_bucket_name: str = "ai-platform-documents"
     s3_presigned_url_expiry: int = 3600
 
-    # CORS
+    # CORS — accepts JSON array string or comma-separated string
     cors_origins: List[str] = ["http://localhost:3000", "http://localhost:5173"]
 
     @field_validator("cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, v):
         if isinstance(v, str):
-            return json.loads(v)
+            v = v.strip()
+            if v.startswith("["):
+                return json.loads(v)
+            # comma-separated fallback
+            return [o.strip() for o in v.split(",") if o.strip()]
         return v
 
     # Rate Limiting
@@ -69,7 +73,10 @@ class Settings(BaseSettings):
     @classmethod
     def parse_allowed_file_types(cls, v):
         if isinstance(v, str):
-            return json.loads(v)
+            v = v.strip()
+            if v.startswith("["):
+                return json.loads(v)
+            return [o.strip() for o in v.split(",") if o.strip()]
         return v
 
     @property

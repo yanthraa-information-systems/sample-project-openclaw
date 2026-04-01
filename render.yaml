@@ -24,7 +24,7 @@ services:
       - key: OPENAI_EMBEDDING_MODEL
         value: text-embedding-3-small
       - key: CORS_ORIGINS
-        value: '["https://ai-platform-frontend.onrender.com"]'
+        value: https://ai-platform-frontend.onrender.com
     disk:
       name: ai-platform-data
       mountPath: /app/data

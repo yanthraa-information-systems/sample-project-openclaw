@@ -5,11 +5,9 @@ import { chatService } from '@/services/chatService'
 import { useChatStore } from '@/store/chatStore'
 import type { CreateSessionRequest, SendMessageRequest, ChatMessage } from '@/types/chat'
 import { QUERY_KEYS } from '@/utils/constants'
-import { v4 as uuidv4 } from 'uuid'
 
-// For generating temp IDs in optimistic updates
 function tempId() {
-  return `temp-${uuidv4()}`
+  return `temp-${crypto.randomUUID()}`
 }
 
 export function useChat(sessionId?: string) {
@@ -53,7 +51,6 @@ export function useChat(sessionId?: string) {
         abortRef.current?.abort()
       }
 
-      // Optimistic: add user message immediately
       const userMsg: ChatMessage = {
         id: tempId(),
         session_id: sessionId,
@@ -70,16 +67,7 @@ export function useChat(sessionId?: string) {
         onChunk: (chunk) => {
           store.appendStreamingContent(chunk)
         },
-        onDone: (messageId, tokens) => {
-          const assistantMsg: ChatMessage = {
-            id: messageId || tempId(),
-            session_id: sessionId,
-            role: 'assistant',
-            content: store.streamingContent + '', // captured at done
-            tokens_used: tokens,
-            created_at: new Date().toISOString(),
-          }
-          // Replace streaming with final
+        onDone: (_messageId, _tokens) => {
           queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chatMessages(sessionId) })
           queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chatSessions })
           store.clearStreaming()
