@@ -51,10 +51,14 @@ def create_app() -> FastAPI:
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
     # CORS
+    cors_origins = settings.cors_origins
+    # In development or if wildcard set, allow all
+    allow_all = "*" in cors_origins
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.cors_origins,
-        allow_credentials=True,
+        allow_origins=["*"] if allow_all else cors_origins,
+        allow_origin_regex=r"https://.*\.onrender\.com" if not allow_all else None,
+        allow_credentials=not allow_all,
         allow_methods=["*"],
         allow_headers=["*"],
     )
