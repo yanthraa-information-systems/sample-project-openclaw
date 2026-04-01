@@ -22,11 +22,6 @@ class Settings(BaseSettings):
     # Database
     database_url: str = "sqlite+aiosqlite:///./data/ai_platform.db"
 
-    # Redis
-    redis_url: str = "redis://localhost:6379/0"
-    celery_broker_url: str = "redis://localhost:6379/1"
-    celery_result_backend: str = "redis://localhost:6379/2"
-
     # JWT
     jwt_access_token_expire_minutes: int = 15
     jwt_refresh_token_expire_days: int = 7
