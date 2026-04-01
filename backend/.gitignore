@@ -1,0 +1,13 @@
+.env
+data/
+*.db
+*.db-wal
+*.db-shm
+*.index
+*.meta
+__pycache__/
+.venv/
+venv/
+.pytest_cache/
+htmlcov/
+.coverage

@@ -1,0 +1,117 @@
+services:
+  # ── Backend (FastAPI) ───────────────────────────────────────────────────────
+  - type: web
+    name: ai-platform-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: DATABASE_URL
+        value: sqlite+aiosqlite:///./data/ai_platform.db
+      - key: FAISS_INDEX_PATH
+        value: ./data/faiss_index
+      - key: SECRET_KEY
+        generateValue: true          # Render auto-generates a secure random value
+      - key: OPENAI_API_KEY
+        sync: false                  # You fill this in Render dashboard
+      - key: OPENAI_MODEL
+        value: gpt-4-turbo-preview
+      - key: OPENAI_EMBEDDING_MODEL
+        value: text-embedding-3-small
+      - key: CORS_ORIGINS
+        value: '["https://ai-platform-frontend.onrender.com"]'
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: ai-platform-redis
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          name: ai-platform-redis
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: redis
+          name: ai-platform-redis
+          property: connectionString
+      # Optional — only needed if you want S3 file storage
+      # - key: AWS_ACCESS_KEY_ID
+      #   sync: false
+      # - key: AWS_SECRET_ACCESS_KEY
+      #   sync: false
+      # - key: S3_BUCKET_NAME
+      #   sync: false
+    disk:
+      name: ai-platform-data
+      mountPath: /app/data
+      sizeGB: 1                      # Stores SQLite DB + FAISS index + uploads
+    healthCheckPath: /health
+
+  # ── Celery Worker ───────────────────────────────────────────────────────────
+  - type: worker
+    name: ai-platform-worker
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: celery -A app.workers.celery_app worker --loglevel=info -Q documents,embeddings -c 2
+    envVars:
+      - key: DATABASE_URL
+        value: sqlite+aiosqlite:///./data/ai_platform.db
+      - key: FAISS_INDEX_PATH
+        value: ./data/faiss_index
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: SECRET_KEY
+        fromService:
+          type: web
+          name: ai-platform-backend
+          envVarKey: SECRET_KEY
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: ai-platform-redis
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          name: ai-platform-redis
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: redis
+          name: ai-platform-redis
+          property: connectionString
+    disk:
+      name: ai-platform-worker-data
+      mountPath: /app/data
+      sizeGB: 1
+
+  # ── Frontend (React/Vite static site) ──────────────────────────────────────
+  - type: web
+    name: ai-platform-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: ai-platform-backend
+          property: host
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html    # SPA fallback for React Router
+
+  # ── Redis ───────────────────────────────────────────────────────────────────
+  - type: redis
+    name: ai-platform-redis
+    plan: free
+    maxmemoryPolicy: noeviction

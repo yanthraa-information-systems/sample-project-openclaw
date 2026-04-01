@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    @apply dark;
+  }
+
+  body {
+    @apply bg-surface-950 text-white antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-surface-900;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-surface-700 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-surface-600;
+  }
+}
+
+@layer components {
+  .prose-invert {
+    --tw-prose-body: theme('colors.surface.200');
+    --tw-prose-headings: theme('colors.white');
+    --tw-prose-bold: theme('colors.white');
+    --tw-prose-links: theme('colors.brand.400');
+    --tw-prose-code: theme('colors.brand.300');
+    --tw-prose-quotes: theme('colors.surface.300');
+    --tw-prose-hr: theme('colors.surface.700');
+    --tw-prose-bullets: theme('colors.surface.400');
+    --tw-prose-counters: theme('colors.surface.400');
+    --tw-prose-th-borders: theme('colors.surface.600');
+    --tw-prose-td-borders: theme('colors.surface.700');
+  }
+}
