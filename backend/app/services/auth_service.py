@@ -63,7 +63,7 @@ class AuthService:
         if not user.is_active:
             raise AuthenticationError("Account is deactivated")
 
-        access_token, refresh_token = create_token_pair(str(user.id), user.role.value)
+        access_token, refresh_token = create_token_pair(str(user.id), user.role)
 
         logger.info("user_logged_in", user_id=str(user.id))
         return TokenResponse(
