@@ -27,10 +27,15 @@ limiter = Limiter(key_func=get_remote_address)
 async def lifespan(app: FastAPI):
     logger.info("application_starting", env=settings.app_env, debug=settings.debug)
     # Auto-create tables (SQLite dev mode; use Alembic for production migrations)
-    from app.db.session import engine
+    from app.db.session import engine, _is_sqlite
     from app.db.base import Base  # noqa: F401
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # Enable WAL mode for SQLite to allow concurrent reads during writes
+        if _is_sqlite:
+            await conn.exec_driver_sql("PRAGMA journal_mode=WAL")
+            await conn.exec_driver_sql("PRAGMA synchronous=NORMAL")
+            await conn.exec_driver_sql("PRAGMA busy_timeout=30000")
     logger.info("database_tables_ready")
     yield
     logger.info("application_shutdown")
@@ -51,14 +56,15 @@ def create_app() -> FastAPI:
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
     # CORS
+    # allow_credentials=True is incompatible with allow_origins=["*"] (browsers reject it).
+    # Always use an explicit origin list with credentials enabled.
     cors_origins = settings.cors_origins
-    # In development or if wildcard set, allow all
     allow_all = "*" in cors_origins
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"] if allow_all else cors_origins,
-        allow_origin_regex=r"https://.*\.onrender\.com" if not allow_all else None,
-        allow_credentials=not allow_all,
+        allow_origins=cors_origins if not allow_all else ["*"],
+        allow_origin_regex=r"https://.*\.onrender\.com",
+        allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )

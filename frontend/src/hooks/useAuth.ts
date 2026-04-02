@@ -7,11 +7,9 @@ import type { LoginRequest, RegisterRequest } from '@/types/auth'
 import { QUERY_KEYS } from '@/utils/constants'
 
 export function useAuth() {
-  const { user, isAuthenticated, setAuth, logout: storeLogout } = useAuthStore()
+  const { user, isAuthenticated, setAuth, setTokens, logout: storeLogout } = useAuthStore()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-
-  const { setTokens } = useAuthStore()
 
   const loginMutation = useMutation({
     mutationFn: async (data: LoginRequest) => {

@@ -2,18 +2,34 @@ import os
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from app.core.config import settings
 
+_is_sqlite = settings.database_url.startswith("sqlite")
+
 # Ensure the data directory exists for SQLite
-if settings.database_url.startswith("sqlite"):
+if _is_sqlite:
     db_path = settings.database_url.replace("sqlite+aiosqlite:///", "")
     os.makedirs(os.path.dirname(os.path.abspath(db_path)), exist_ok=True)
 
-engine = create_async_engine(
-    settings.database_url,
-    echo=settings.debug,
-    future=True,
-    # SQLite requires check_same_thread=False for async
-    connect_args={"check_same_thread": False} if settings.database_url.startswith("sqlite") else {},
-)
+# SQLite: use WAL mode + serialise writes via pool_size=1 to avoid "database is locked"
+# PostgreSQL: use standard connection pool
+if _is_sqlite:
+    engine = create_async_engine(
+        settings.database_url,
+        echo=settings.debug,
+        future=True,
+        connect_args={"check_same_thread": False, "timeout": 30},
+        # Serialize all writes through a single connection to prevent locking
+        pool_size=1,
+        max_overflow=0,
+    )
+else:
+    engine = create_async_engine(
+        settings.database_url,
+        echo=settings.debug,
+        future=True,
+        pool_size=10,
+        max_overflow=20,
+        pool_pre_ping=True,
+    )
 
 AsyncSessionLocal = async_sessionmaker(
     bind=engine,

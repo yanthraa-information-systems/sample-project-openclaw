@@ -12,9 +12,9 @@ services:
       - key: DEBUG
         value: "false"
       - key: DATABASE_URL
-        value: sqlite+aiosqlite:///./data/ai_platform.db
+        value: sqlite+aiosqlite:////app/data/ai_platform.db
       - key: FAISS_INDEX_PATH
-        value: ./data/faiss_index
+        value: /app/data/faiss_index
       - key: SECRET_KEY
         generateValue: true
       - key: OPENAI_API_KEY

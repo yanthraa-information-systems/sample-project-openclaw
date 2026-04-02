@@ -25,14 +25,14 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         start_time = time.perf_counter()
         logger.info("request_started")
 
-        response = None
+        status_code = 500
         try:
             response = await call_next(request)
+            status_code = response.status_code
             return response
         except Exception as exc:
             logger.error("request_failed", exc_info=exc)
             raise
         finally:
             duration_ms = round((time.perf_counter() - start_time) * 1000, 2)
-            status_code = response.status_code if response is not None else 500
             logger.info("request_completed", status_code=status_code, duration_ms=duration_ms)

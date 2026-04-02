@@ -31,11 +31,11 @@ async def refresh_token(data: RefreshTokenRequest, db: DBSession):
 
 
 @router.post("/logout", response_model=MessageResponse)
-async def logout(current_user: CurrentUser):
+async def logout():
     """
-    Logout endpoint. On the client side, discard the stored tokens.
-    For stateless JWT, server-side invalidation requires a token denylist
-    (e.g., Redis). That can be added here as needed.
+    Logout endpoint. Stateless JWT — client discards tokens.
+    No auth required: token may already be expired at logout time.
+    For server-side invalidation, add a Redis denylist here.
     """
     return MessageResponse(message="Successfully logged out")
 
