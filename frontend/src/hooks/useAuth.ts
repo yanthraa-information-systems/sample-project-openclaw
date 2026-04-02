@@ -11,9 +11,13 @@ export function useAuth() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
+  const { setTokens } = useAuthStore()
+
   const loginMutation = useMutation({
     mutationFn: async (data: LoginRequest) => {
       const tokens = await authService.login(data)
+      // Store token immediately so the axios interceptor sends it with getMe()
+      setTokens(tokens.access_token, tokens.refresh_token)
       const me = await authService.getMe()
       return { tokens, me }
     },
